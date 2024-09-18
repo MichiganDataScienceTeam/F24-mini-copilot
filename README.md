@@ -2,6 +2,8 @@
 
 In this project, we will attempt to recreate a GitHub Copilot. Since properly recreating the service requires an immense amount of compute for model training, we will seek to build a **Mini Copilot**. The purpose of this undertaking, and the materials in this repo, is purely educational.
 
+Weekly slides can be found [here](https://drive.google.com/drive/folders/1EUTBDfIL_Y3dRKkDsNaysntJQjiOef1c?usp=drive_link) (requires UMich login).
+
 ## Project Master Schedule
 
 | Week | Date   | Topic                                      |
