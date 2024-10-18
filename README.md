@@ -16,3 +16,9 @@ Weekly slides can be found [here](https://drive.google.com/drive/folders/1EUTBDf
 | 6    | 11/3   | Creating a VSCode Extension                 |
 | 7    | 11/10  | Buffer Week / Going deeper                  |
 | 8    | 11/17  | Final Expo Prep                             |
+
+## Repository Structure
+
+This repository contains both educational materials (starter notebooks for basic training) and our actual full implementation of recreating GitHub Copilot.
+
+Education materials can be found under `education/`, and our implementation can be found under `src/`.
