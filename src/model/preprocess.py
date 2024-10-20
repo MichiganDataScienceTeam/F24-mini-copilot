@@ -6,4 +6,4 @@ from datasets import load_dataset, Dataset, IterableDataset
 def clean_comments(code: str) -> str:
     no_comment = re.sub(r'#[^\n]*', '', code)                       # remove comments '# comment'
     no_docstring = re.sub(r'\n\s*"""[^(""")]+"""', '', no_comment)  # remove docstrings '"""docstring"""'
-    return re.sub(r'[\n\s*]{2,}', '\n', no_docstring)               # remove empty lines
+    return re.sub(r'\s*\n', '\n', no_docstring)                     # remove trailing whitespace
