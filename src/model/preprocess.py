@@ -1,7 +1,5 @@
 import regex as re
-from datasets import load_dataset, Dataset, IterableDataset
 
-        
 # Clean inline comments and block comments
 def clean_comments(code: str) -> str:
     no_comment = re.sub(r'#[^\n]*', '', code)                       # remove comments '# comment'
