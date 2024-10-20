@@ -39,8 +39,12 @@ def train_single_epoch(model, tokenizer, optimizer, train_loader):
         #raise NotImplementedError
 
 
-def validate(model, test_loader, batch):
+def validate(model, test_loader):
+    """
+    Run validation across batches in test_loader
     'Take in model, test_loader and batch'
+
+    """
     
     model.eval()
 
@@ -56,7 +60,9 @@ def validate(model, test_loader, batch):
 
 # train for many epochs
 def train(n_epochs, model, tokenizer, optimizer, train_loader):
-    """Take in model, test_loader"""
+    """
+    train model for n_epochs
+    """
     model.train()
     
     # Clear residual gradients (might cause issues with taking grad. of frozen layers)
