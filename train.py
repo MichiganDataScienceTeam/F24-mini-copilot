@@ -39,7 +39,7 @@ def train_single_epoch(model, tokenizer, optimizer, train_loader):
         #raise NotImplementedError
 
 
-def val(model, test_loader, batch):
+def validate(model, test_loader, batch):
     'Take in model, test_loader and batch'
     
     model.eval()
@@ -64,7 +64,6 @@ def train(n_epochs, model, tokenizer, optimizer, train_loader):
 
     for epoch in range(n_epochs):
         print(f"Epoch: {epoch}")
-
         train_single_epoch(model, tokenizer, optimizer, train_loader)
 
     print("Training complete")
