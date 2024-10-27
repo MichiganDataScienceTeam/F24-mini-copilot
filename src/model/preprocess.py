@@ -1,5 +1,5 @@
 import regex as re
-from datasets import load_dataset, Dataset, IterableDataset
+from datasets import load_dataset, Dataset
 
 
 # Clean inline comments and block comments
