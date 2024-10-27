@@ -2,18 +2,26 @@
 ## The input text is tokenized and then split into chunks of size chunk_size
 
 from transformers import AutoTokenizer
+import torch
 
-def chunk(inp: str, tokenizer: AutoTokenizer, chunk_size: int = 256, overlapping_len: int = 3) -> list:
+def chunk(inp: str, 
+          tokenizer: AutoTokenizer, 
+          chunk_size: int = 256, 
+          overlapping_len: int = 3,
+          num_chunks: int = 128) -> list:
     tokenized_txt = tokenizer(inp, return_tensors="pt")["input_ids"]
-    len = tokenized_txt.size()[1]
+    token_len = tokenized_txt.size()[1]
     
-    if len <= chunk_size:
+    if token_len <= chunk_size:
         return [tokenized_txt]
     else:
         chunks = []
         chunks.append(tokenized_txt.view(-1)[:chunk_size])
-        for i in range(chunk_size, len, chunk_size):
-            if i + chunk_size > len:
+        for i in range(chunk_size, token_len, chunk_size):
+            if len(chunks) == num_chunks:
+                # only return num_chunks chunks so that it is not stuck on the same sample for too long
+                break
+            if i + chunk_size > token_len:
                 new_chunk = tokenized_txt.view(-1)[i-overlapping_len:]
                 new_chunk_len = new_chunk.size()[0]
                 new_chunk = new_chunk.view(1, new_chunk_len)
