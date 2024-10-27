@@ -79,6 +79,16 @@ def include(content: str) -> bool:
 
 # -----------------------  Testing ---------------------
 
+def keep_only_content(sample: dict) -> dict:
+    # TODO: Is there a way to remove other keys instead of forcing []?
+    for key in sample.keys():
+        if key == "content":
+            continue
+
+        sample[key] = []
+    
+    return sample
+
 
 # preview cleaning and check
 def preview():
