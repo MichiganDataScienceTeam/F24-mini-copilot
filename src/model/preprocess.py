@@ -4,14 +4,32 @@ from datasets import load_dataset, Dataset
 
 # Clean inline comments and block comments
 def clean_comments(code: str) -> str:
-    no_comment = re.sub(r"#[^\n]*", "", code)  # remove comments '# comment'
+    # Remove inline comments using #
+    no_comment = re.sub(
+        pattern=r"#[^\n]*",
+        repl="",
+        string=code)
 
-    # remove doc strings (limited to be following def or class)
+    # Remove """ docstrings at the start of a file
+    no_leading_docstring = re.sub(
+        pattern=r'\A\s*"""((?:(?!""")[\s\S])*)"""',
+        repl="",
+        string=no_comment
+    )
+
+    # Remove doc strings (limited to be following def or class)
     # https://stackoverflow.com/questions/1687620/regex-match-everything-but-a-specific-pattern
     no_docstring = re.sub(
-        r'(class|def)(.+)\s+"""((?:(?!""")[\s\S])*)"""', "", no_comment
+        pattern=r'(class|def)(.+)\s+"""((?:(?!""")[\s\S])*)"""',
+        repl="",
+        string=no_leading_docstring
     )
-    return re.sub(r"\s*\n", "\n", no_docstring)  # remove trailing whitespace
+
+    # Remove extra whitespace
+    return re.sub(
+        pattern=r"\s*\n",
+        repl="\n",
+        string=no_docstring)
 
 
 def include(content: str) -> bool:
