@@ -61,6 +61,7 @@ def get_data():
     ds = ds.filter(lambda x: include(x["content"]))
     return ds
 
+
 def keep_only_content(sample: dict) -> dict:
     # TODO: Is there a way to remove other keys instead of forcing []?
     for key in sample.keys():
