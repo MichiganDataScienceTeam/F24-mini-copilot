@@ -25,11 +25,14 @@ def clean_comments(code: str) -> str:
         string=no_leading_docstring
     )
 
+    # Remove leading and trailing whitespace
+    no_bound_whitespace = no_docstring.strip()
+
     # Remove extra whitespace
     return re.sub(
         pattern=r"\s*\n",
         repl="\n",
-        string=no_docstring)
+        string=no_bound_whitespace)
 
 
 def include(content: str) -> bool:
