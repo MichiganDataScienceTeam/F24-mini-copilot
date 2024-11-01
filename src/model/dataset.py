@@ -10,7 +10,7 @@ class CleanDataset(IterableDataset):
     def __init__(self, train_split: bool, max_size: int = float("inf")):
         SPLIT_NAME = [CleanDataset.TRAIN_SPLIT_NAME, CleanDataset.VAL_SPLIT_NAME][int(train_split)]
 
-        # Set max size 
+        # Set max size
         self.max_size = max_size
 
         # Load dataset
