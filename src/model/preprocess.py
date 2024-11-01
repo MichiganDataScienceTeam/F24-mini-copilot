@@ -16,7 +16,7 @@ def get_data():
     return ds
 
 
-# ----------------------- Everything Below Is Implementation ---------------------
+# -----------------------  Implementation ---------------------
 
 
 def clean_doc(code: str, delim: str):
@@ -77,6 +77,9 @@ def include(content: str) -> bool:
     return False
 
 
+# -----------------------  Testing ---------------------
+
+
 # preview cleaning and check
 def preview():
     ds = get_data()
@@ -88,5 +91,37 @@ def preview():
             break
 
 
+def tests():
+    input1 = """
+        string1 = '''
+            keep me
+        '''
+
+        '''
+        docstring1
+        '''
+
+        '''docstring2'''
+
+        '''docstring3
+        docstring3'''
+
+        string2 = '''keep me'''
+    """
+    res = clean_comments(input1)
+
+    input2 = '''
+        string = """
+            "hello there" 'hi there'
+        """
+
+        """
+        1234567890qwertyuiop[!@#$%^&*()].
+        """
+    '''
+    print(clean_comments(input1))
+    print(clean_comments(input2))
+
+
 if __name__ == "__main__":
-    preview()
+    tests()
