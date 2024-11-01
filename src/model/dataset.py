@@ -1,7 +1,7 @@
 from datasets import load_dataset
 from torch.utils.data import DataLoader, IterableDataset
 
-from preprocess import clean_comments, include
+from preprocess import clean_comments, include, keep_only_content
 
 class CleanDataset(IterableDataset):
     TRAIN_SPLIT_NAME = "codeparrot/codeparrot-clean-train"
@@ -10,18 +10,19 @@ class CleanDataset(IterableDataset):
     def __init__(self, train_split: bool, max_size: int = float("inf")):
         SPLIT_NAME = [CleanDataset.TRAIN_SPLIT_NAME, CleanDataset.VAL_SPLIT_NAME][int(train_split)]
 
-        # Set max size
+        # Set max size 
         self.max_size = max_size
 
         # Load dataset
         ds = load_dataset(SPLIT_NAME,
                           streaming=True,
                           split="train")    # Invariant for BOTH train and val sets
-        
+    
         # Preprocessing
         ds = ds.filter(lambda x: x["path"].endswith(".py"))               # Python only
         ds = ds.filter(lambda x: include(x["content"]))                   # DS imports only
         ds = ds.map(lambda x: {"content": clean_comments(x["content"])})  # Reformat code
+        ds = ds.map(keep_only_content)                                    # Smaller samples
 
         # Prepare for torch DataLoader
         ds = ds.with_format("torch")
