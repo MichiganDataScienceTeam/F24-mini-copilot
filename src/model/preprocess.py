@@ -78,9 +78,6 @@ def include(content: str) -> bool:
     return False
 
 
-# -----------------------  Testing ---------------------
-
-
 # preview cleaning and check
 def preview():
     ds = get_data()
@@ -126,3 +123,4 @@ def tests():
 
 if __name__ == "__main__":
     tests()
+
