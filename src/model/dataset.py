@@ -1,5 +1,6 @@
 from datasets import load_dataset
 from torch.utils.data import DataLoader, IterableDataset
+from typing import Iterator
 
 from preprocess import clean_comments, include, keep_only_content
 
@@ -29,7 +30,7 @@ class CleanDataset(IterableDataset):
 
         self.ds = ds
     
-    def generate(self) -> dict:
+    def generate(self) -> Iterator[dict]:
         i = iter(self.ds)
         count = 0
 
@@ -49,9 +50,9 @@ class CleanDataset(IterableDataset):
                 print(f"[WARNING] Exception while loading sample {count}/{self.max_size}: {e}. Skipped item")
                 continue
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[dict]:
         return iter(self.generate())
     
-    def get_dataloader(self, **kwargs):
+    def get_dataloader(self, **kwargs) -> DataLoader:
         return DataLoader(self, **kwargs)
 
