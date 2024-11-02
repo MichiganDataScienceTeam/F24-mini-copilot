@@ -8,7 +8,7 @@ def chunk(inp: str,
           tokenizer: AutoTokenizer, 
           chunk_size: int = 256, 
           overlapping_len: int = 3,
-          max_chunks: int = 128) -> list:
+          max_chunks: int = 128) -> torch.Tensor:
     
     # Tokenize entire sample
     tokenized_txt = tokenizer(inp,
