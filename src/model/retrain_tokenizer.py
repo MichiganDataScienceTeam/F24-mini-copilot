@@ -1,8 +1,3 @@
-"""
-Do not put this version in a pull request without review
-Translated from a notebook
-"""
-
 from transformers import AutoTokenizer
 from dataset import CleanDataset
 
@@ -24,6 +19,7 @@ def get_training_corpus(ds_):
 # Load old tokenizer
 old_tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
+# Train new tokenizer
 tokenizer = old_tokenizer.train_new_from_iterator(
     text_iterator=get_training_corpus(ds),
     vocab_size=VOCAB_SIZE
