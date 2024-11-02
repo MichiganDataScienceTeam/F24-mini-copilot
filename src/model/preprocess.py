@@ -2,24 +2,7 @@ from collections.abc import MutableSet
 import regex as re
 from datasets import load_dataset, Dataset
 
-
-# call this function to get cleaned data
-def get_data():
-    ds = load_dataset(
-        "codeparrot/codeparrot-clean",
-        streaming=True,
-        trust_remote_code=True,
-        split="train",
-    )
-
-    ds = ds.filter(lambda x: include(x["content"]))
-    ds = ds.map(lambda x: {"content": clean_comments(x["content"])})
-    return ds
-
-
 # -----------------------  Implementation ---------------------
-
-
 def clean_doc(code: str, delim: str):
     string_pre = r"(\S+\s*=\s*)"
     between = rf"({delim})((?:(?!{delim})[\s\S])*)({delim})"
@@ -78,16 +61,28 @@ def include(content: str) -> bool:
     return False
 
 
+# Filters samples to return only code
+def keep_only_content(sample: dict) -> dict:
+    # TODO: Is there a way to remove other keys instead of forcing []?
+    for key in sample.keys():
+        if key == "content":
+            continue
+        sample[key] = []
+    
+    return sample
+
+
 # preview cleaning and check
 def preview():
-    ds = get_data()
-    i = 0
+    from dataset import CleanDataset
+    
+    ds = CleanDataset(
+        train_split=False,
+        max_size=100
+    )
+
     for x in ds:
         print(x["content"])
-        i += 1
-        if i == 100:
-            break
-
 
 def tests():
     input1 = """
