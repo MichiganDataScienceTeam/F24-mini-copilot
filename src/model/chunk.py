@@ -12,10 +12,7 @@ def chunk(inp: str,
     
     # Tokenize entire sample
     tokenized_txt = tokenizer(inp,
-                              return_tensors="pt",
-                              max_length=chunk_size, # This doesn't truncate, only sets pad size
-                              padding="max_length",
-                              truncation=False
+                              return_tensors="pt"
                              )["input_ids"].view(-1)
     token_len = len(tokenized_txt)
     
