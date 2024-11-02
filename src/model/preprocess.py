@@ -1,4 +1,3 @@
-from collections.abc import MutableSet
 import regex as re
 
 # -----------------------  Implementation ---------------------
@@ -77,7 +76,7 @@ def keep_only_content(sample: dict) -> dict:
 # preview cleaning and check
 def preview():
     from dataset import CleanDataset
-    
+
     ds = CleanDataset(
         train_split=False,
         max_size=100
