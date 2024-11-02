@@ -1,6 +1,4 @@
-from collections.abc import MutableSet
 import regex as re
-from datasets import load_dataset, Dataset
 
 # -----------------------  Implementation ---------------------
 def clean_doc(code: str, delim: str):
@@ -75,7 +73,7 @@ def keep_only_content(sample: dict) -> dict:
 # preview cleaning and check
 def preview():
     from dataset import CleanDataset
-    
+
     ds = CleanDataset(
         train_split=False,
         max_size=100
