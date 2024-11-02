@@ -6,9 +6,9 @@ Translated from a notebook
 from transformers import AutoTokenizer
 from dataset import CleanDataset
 
-MAX_SIZE = 100
+MAX_SIZE = 10_000_000
 VOCAB_SIZE = 52000
-OUT_FILE_PATH = "./retrained_attempt_1"
+OUT_FILE_PATH = "./tokenizer_10M"
 
 # Get dataset
 ds = CleanDataset(
