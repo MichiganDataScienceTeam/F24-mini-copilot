@@ -23,8 +23,8 @@ def chunk(inp: str,
     chunks = []
 
     for i in range(0, token_len-overlapping_len, chunk_size-overlapping_len):
-        # Exit if max_chunks is exceeded
-        if len(chunks) > max_chunks:
+        # Exit if max_chunks is met
+        if len(chunks) >= max_chunks:
             break
 
         # Create (potentially too short) new chunk
