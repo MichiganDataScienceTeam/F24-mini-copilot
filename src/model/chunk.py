@@ -30,7 +30,7 @@ def chunk(inp: str,
         # Generate (potentially empty) padding
         padding = torch.full(
             size=(chunk_size - len(new_chunk), ),
-            fill_value=tokenizer.pad_token_id
+            fill_value=tokenizer.pad_token_id if tokenizer.pad_token_id else tokenizer.eos_token_id
         )
 
         # Pad
