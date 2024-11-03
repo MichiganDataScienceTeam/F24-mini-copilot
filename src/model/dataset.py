@@ -105,4 +105,5 @@ def get_dataloaders(batch_size = 16):
     valid_data = SafeIterableDataset(valid_data)
 
     train_loader = DataLoader(train_data,  batch_size=batch_size)
-    test_loader  = DataLoader(valid_data,  batch_size=batch_size)
+    valid_loader  = DataLoader(valid_data,  batch_size=batch_size)
+    return train_loader, valid_loader
