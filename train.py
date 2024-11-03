@@ -39,21 +39,36 @@ def train_single_epoch(model, tokenizer, optimizer, train_loader):
         #raise NotImplementedError
 
 
-def validate(model, test_loader):
+def validate(model, tokenize, test_loader):
     """
     Run validation across batches in test_loader
     'Take in model, test_loader and batch'
 
     """
-    
+    losses=[]
     model.eval()
 
     with torch.no_grad():
+        # for batch in test_loader:
+        #     # TODO: Implement validation loop
+        #     # Note that device that data is on should be the same as the model
+        #     ...
         for batch in test_loader:
-            # TODO: Implement validation loop
+            # Implement validation loop
             # Note that device that data is on should be the same as the model
-            ...
-            raise NotImplementedError
+            input_ids = tokenize(batch["content"])
+            labels = input_ids.clone()
+            outputs = model(input_ids, labels=labels)
+            losses.append(outputs.loss)
+            loss = torch.mean(torch.tensor(losses))
+            try:
+                perplexity = torch.exp(loss)
+            except OverflowError:
+                perplexity = float("inf")
+                raise NotImplementedError
+            return loss.item(), perplexity.item()
+        
+            # raise NotImplementedError
 
 
 # TODO: Consider setting up model checkpointing (set up a directory to save checkpoints)
