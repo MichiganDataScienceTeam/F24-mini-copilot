@@ -99,7 +99,43 @@ def train(n_epochs, model, tokenizer, optimizer, train_loader, save_interval=1, 
 
     print("Training complete")
 
-<<<<<<< HEAD
+def load_latest_checkpoint(checkpoint_dir, model, optimizer):
+    """
+    Load the latest checkpoint from the specified directory.
+    
+    Args:
+        checkpoint_dir (str): Directory containing the checkpoint files.
+        model (torch.nn.Module): The model to load the weights into.
+        optimizer (torch.optim.Optimizer): The optimizer to load the state into.
+        
+    Returns:
+        int: The epoch number of the loaded checkpoint, or -1 if no checkpoint was found.
+    """
+    # Get a list of all .pt files in the checkpoint directory
+    checkpoint_files = [f for f in os.listdir(checkpoint_dir) if f.endswith('.pt')]
+    
+    if not checkpoint_files:
+        print("No checkpoint files found.")
+        return -1
+    
+    # Determine the most recent checkpoint file based on modification time
+    latest_checkpoint = max(
+        (os.path.join(checkpoint_dir, f) for f in checkpoint_files),
+        key=os.path.getmtime
+    )
+    
+    print(f"Loading checkpoint from: {latest_checkpoint}")
+    
+    # Load the checkpoint
+    checkpoint = torch.load(latest_checkpoint)
+    
+    # Load the model and optimizer state
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    
+    # Return the epoch number for further reference
+    return checkpoint['epoch']
+
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
@@ -120,6 +156,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-=======
-# TODO: Save the model
->>>>>>> 86df2951929ae4688905b84dded85d4cd5403349
