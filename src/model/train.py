@@ -7,6 +7,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, AdamW, pipeline
 from torch.utils.data import DataLoader
 from datasets import load_dataset, Dataset, IterableDataset
 from dataset import get_dataloaders, tokenize
+import argparse
 # import tokenize from tokenizer.py
 
 
@@ -38,6 +39,7 @@ def train_single_epoch(model, tokenize, optimizer, train_loader):
         loss.backward()
         optimizer.step()
         #raise NotImplementedError
+
 
 
 def validate(model, tokenize, test_loader):
@@ -75,11 +77,13 @@ def validate(model, tokenize, test_loader):
 # TODO: Consider setting up model checkpointing (set up a directory to save checkpoints)
 
 # train for many epochs
-def train(n_epochs, model, tokenizer, optimizer, train_loader, save_interval=1, save_dir='checkpoints'):
+def train(n_epochs, model, tokenizer, optimizer, train_loader, save_interval=1, save_dir='checkpoints', custom_checkpoint=None):
     """
     train model for n_epochs
     """
     model.train()
+    if custom_checkpoint:
+         model = torch.load(custom_checkpoint)
     
     os.makedirs(save_dir, exist_ok=True)
     # Clear residual gradients (might cause issues with taking grad. of frozen layers)
@@ -116,7 +120,9 @@ def load_latest_checkpoint(checkpoint_dir, model, optimizer):
     
     if not checkpoint_files:
         print("No checkpoint files found.")
-        return -1
+        model = AutoModelForCausalLM.from_pretrained("gpt2")
+        return 0
+
     
     # Determine the most recent checkpoint file based on modification time
     latest_checkpoint = max(
@@ -136,7 +142,7 @@ def load_latest_checkpoint(checkpoint_dir, model, optimizer):
     # Return the epoch number for further reference
     return checkpoint['epoch']
 
-def main():
+def main(n_epochs, checkpoint_dir, custom_checkpoint):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
 
@@ -150,9 +156,17 @@ def main():
         model=model,
         tokenizer=tokenize,
         optimizer=optimizer,
-        train_loader=train_dataloader
+        train_loader=train_dataloader,
+        checkpoint_dir=checkpoint_dir,
+        custom_checkpoint=custom_checkpoint
     )
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Train Copilot Model")
+    parser.add_argument("--checkpoint_folder", default="checkpoints", help="Directory where checkpoints are to be stored")
+    parser.add_argument("-c", "--custom_checkpoint", default=None, help="Checkpoint to load from (checkpoint.pt)")
+    parser.add_argument("-n", "--epochs", default=5, help="Number of epochs to train for")
+    args = parser.parse_args()
+    
+    main(args.epochs, args.checkpoint_folder, args.custom_checkpoint)
