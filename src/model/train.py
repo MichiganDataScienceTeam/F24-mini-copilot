@@ -75,21 +75,31 @@ def validate(model, tokenize, test_loader):
 # TODO: Consider setting up model checkpointing (set up a directory to save checkpoints)
 
 # train for many epochs
-def train(n_epochs, model, tokenizer, optimizer, train_loader):
+def train(n_epochs, model, tokenizer, optimizer, train_loader, save_interval=1, save_dir='checkpoints'):
     """
     train model for n_epochs
     """
     model.train()
     
+    os.makedirs(save_dir, exist_ok=True)
     # Clear residual gradients (might cause issues with taking grad. of frozen layers)
     model.zero_grad(set_to_none=True)
 
     for epoch in range(n_epochs):
         print(f"Epoch: {epoch}")
         train_single_epoch(model, tokenizer, optimizer, train_loader)
+        if (epoch + 1) % save_interval == 0:
+                    checkpoint_path = os.path.join(save_dir, f"checkpoint_epoch_{epoch + 1}.pt")
+                    torch.save({
+                        'epoch': epoch + 1,
+                        'model_state_dict': model.state_dict(),
+                        'optimizer_state_dict': optimizer.state_dict(),
+                    }, checkpoint_path)
+                    print(f"Checkpoint saved at {checkpoint_path}")
 
     print("Training complete")
 
+<<<<<<< HEAD
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
@@ -110,3 +120,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+=======
+# TODO: Save the model
+>>>>>>> 86df2951929ae4688905b84dded85d4cd5403349
