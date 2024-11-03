@@ -90,5 +90,23 @@ def train(n_epochs, model, tokenizer, optimizer, train_loader):
 
     print("Training complete")
 
+def main():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f'Using device: {device}')
 
-# TODO: Save the model
+    model     = AutoModelForCausalLM.from_pretrained("gpt2")
+    model.to(device)
+    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=1e-3, weight_decay= 0.001)
+    train_dataloader, valid_dataloader = get_dataloaders(batch_size=16)
+    train(
+        n_epochs=5,
+        model=model,
+        tokenizer=tokenize,
+        optimizer=optimizer,
+        train_loader=train_dataloader
+    )
+
+
+if __name__ == "__main__":
+    main()
