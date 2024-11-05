@@ -51,23 +51,13 @@ def include(content: str) -> bool:
         "torch",
         "scipy",
     ]
-    for library in libraries:
-        a = "import " + library
-        b = "from " + library + " import"
-        if a in content or b in content:
-            return True
-    return False
+
+    return bool(re.search("|".join(libraries), content))
 
 
 # Filters samples to return only code
 def keep_only_content(sample: dict) -> dict:
-    # TODO: Is there a way to remove other keys instead of forcing []?
-    for key in sample.keys():
-        if key == "content":
-            continue
-        sample[key] = []
-    
-    return sample
+    return {"content": sample["content"]}
 
 
 # preview cleaning and check
