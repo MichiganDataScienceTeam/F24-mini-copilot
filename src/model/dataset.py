@@ -94,7 +94,8 @@ class ChunkedDataset(CleanDataset):
                 # Yield
                 yield {
                     "input_ids": ids[i],
-                    "attention_mask": mask[i]
+                    "attention_mask": mask[i],
+                    "labels": ids[i].clone()
                 }
                 count += 1
 
