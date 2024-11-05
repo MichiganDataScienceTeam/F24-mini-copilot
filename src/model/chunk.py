@@ -18,6 +18,7 @@ def chunk(inp: str,
     
     # Add chunks
     chunks = []
+    last_padding_size = 0
 
     for i in range(0, token_len-overlapping_len, chunk_size-overlapping_len):
         # Exit if max_chunks is met
@@ -32,6 +33,7 @@ def chunk(inp: str,
             size=(chunk_size - len(new_chunk), ),
             fill_value=tokenizer.pad_token_id if tokenizer.pad_token_id else tokenizer.eos_token_id
         )
+        last_padding_size = max(0, chunk_size - len(new_chunk))
 
         # Pad
         new_chunk = torch.cat((new_chunk, padding))
@@ -39,4 +41,14 @@ def chunk(inp: str,
         # Add new correctly-sized chunk
         chunks.append(new_chunk)
     
-    return torch.stack(chunks)
+    # Compile results
+    input_ids = torch.stack(chunks)
+    attention_mask = torch.ones_like(input_ids)
+
+    if last_padding_size >= 2:
+        attention_mask[-1, -last_padding_size:] = 0
+
+    return {
+        "input_ids": input_ids,
+        "attention_mask": attention_mask
+    }
