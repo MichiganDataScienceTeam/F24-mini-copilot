@@ -1,5 +1,5 @@
 from datasets import load_dataset
-from torch.utils.data import DataLoader, IterableDataset
+from torch.utils.data import IterableDataset
 from transformers import AutoTokenizer
 from typing import Iterator
 
@@ -103,3 +103,31 @@ class ChunkedDataset(CleanDataset):
             # Stop generating new chunks if max_size is reached
             if count >= self.max_size:
                 break
+
+
+# SAMPLE USAGE
+if __name__ == "__main__":
+    tokenizer = AutoTokenizer.from_pretrained("./tokenizer_10M")
+
+    ds = ChunkedDataset(
+        train_split=True,      # Use training split
+        max_size=1_000_000,    # Provide up to 1 million samples (not files)
+        tokenizer=tokenizer,   # Set tokenizer
+        chunk_size=256,        # Max length of id/mask sequences is 256
+        chunk_overlap_len=3,   # Chunks share 3 ids with the previous chunk
+        max_chunks=128,        # Max chunks per file
+    )
+
+    # ChunkedDataset is iterable, so it can be directly passed to a DataLoader
+    from torch.utils.data import DataLoader
+
+    loader = DataLoader(
+        dataset=ds,
+        batch_size=16,
+        # shuffle should NOT be set because the dataset has unknown length
+    )
+
+    # Inspect a single element of this batch
+    for batch in loader:
+        print(batch)
+        break
