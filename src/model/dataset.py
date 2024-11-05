@@ -105,7 +105,11 @@ class ChunkedDataset(CleanDataset):
 
 # SAMPLE USAGE
 if __name__ == "__main__":
-    tokenizer = AutoTokenizer.from_pretrained("./tokenizer_10M")
+    try:
+        tokenizer = AutoTokenizer.from_pretrained("./tokenizer_10M")
+    except OSError as e:
+        print("[WARNING] tokenizer_10M folder was not found, defaulting to GPT2")
+        tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
     ds = ChunkedDataset(
         train_split=True,      # Use training split
