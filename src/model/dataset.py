@@ -31,26 +31,24 @@ class CleanDataset(IterableDataset):
         # Prepare for torch DataLoader
         ds = ds.with_format("torch")
 
+        # Enforce max size
+        ds = ds.take(max_size)
+
         self.ds = ds
 
-    def generate(self) -> Iterator[dict]:
-        i = iter(self.ds)
-        count = 0
+    def generate(self) -> Iterator[str]:
+        i = 0 # Tracks attempt number for exception reporting
 
-        while True:
-            # Respect max_size
-            if count == self.max_size:
-                break
-            count += 1
+        for code_file in self.ds:
+            i += 1
 
             # Yield when possible, skip and log when not
             try:
-                yield next(i)
+                yield code_file["content"]
             except StopIteration:
                 break
             except Exception as e:
-                count -= 1
-                print(f"[WARNING] Exception while loading sample {count}/{self.max_size}: {e}. Skipped item")
+                print(f"[WARNING] Exception while loading sample {i+1}/{self.max_size}: {e}. Skipped item")
                 continue
 
     def __iter__(self) -> Iterator[dict]:
@@ -75,7 +73,7 @@ class ChunkedDataset(CleanDataset):
             # Attempt to chunk each code sample
             chunks = None
             try:
-                chunks = chunk(inp=text["content"],
+                chunks = chunk(inp=text,
                                tokenizer=self.tokenizer, 
                                chunk_size=self.chunk_size,
                                overlapping_len=self.overlapping_len,
