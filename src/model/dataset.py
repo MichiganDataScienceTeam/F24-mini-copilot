@@ -21,7 +21,7 @@ class CleanDataset(IterableDataset):
         ds = load_dataset(SPLIT_NAME,
                           streaming=True,
                           split="train")    # Invariant for BOTH train and val sets
-    
+
         # Preprocessing
         ds = ds.filter(lambda x: x["path"].endswith(".py"))               # Python only
         ds = ds.filter(lambda x: include(x["content"]))                   # DS imports only
@@ -32,7 +32,7 @@ class CleanDataset(IterableDataset):
         ds = ds.with_format("torch")
 
         self.ds = ds
-    
+
     def generate(self) -> Iterator[dict]:
         i = iter(self.ds)
         count = 0
@@ -54,13 +54,13 @@ class CleanDataset(IterableDataset):
                 continue
 
     def __iter__(self) -> Iterator[dict]:
-        return iter(self.generate())
+        return self.generate()
 
 
 class ChunkedDataset(CleanDataset):
     def __init__(self, train_split: bool, max_size: int, tokenizer: AutoTokenizer,
                  chunk_size: int = 256, chunk_overlap_len: int = 3, max_chunks: int = 128):
-        
+
         super().__init__(train_split, max_size)
 
         self.tokenizer = tokenizer
@@ -99,7 +99,7 @@ class ChunkedDataset(CleanDataset):
                     "attention_mask": mask[i]
                 }
                 count += 1
-            
+
             # Stop generating new chunks if max_size is reached
             if count >= self.max_size:
                 break
