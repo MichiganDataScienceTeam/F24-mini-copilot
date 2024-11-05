@@ -51,12 +51,8 @@ def include(content: str) -> bool:
         "torch",
         "scipy",
     ]
-    for library in libraries:
-        a = "import " + library
-        b = "from " + library + " import"
-        if a in content or b in content:
-            return True
-    return False
+
+    return bool(re.search("|".join(libraries), content))
 
 
 # -----------------------  Testing ---------------------
