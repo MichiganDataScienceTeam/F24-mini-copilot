@@ -21,7 +21,11 @@ def train_single_epoch(model: AutoModelForCausalLM,
     for batch in train_loader:
         optimizer.zero_grad()
 
-        outputs = model(**batch)
+        outputs = model(
+            input_ids=batch["input_ids"].to(device),
+            attention_mask=batch["attention_mask"].to(device),
+            labels=batch["labels"].to(device)
+        )
         loss = outputs.loss
         loss.backward()
 
@@ -37,7 +41,11 @@ def validate(model: AutoModelForCausalLM,
 
     with torch.no_grad():
         for batch in test_loader:
-            outputs = model(**batch)
+            outputs = model(
+                input_ids=batch["input_ids"].to(device),
+                attention_mask=batch["attention_mask"].to(device),
+                labels=batch["labels"].to(device)
+            )
 
             loss_sum += outputs.loss.item()
             n_losses += 1
@@ -128,12 +136,14 @@ def main(n_epochs: int,
          save_interval: int,
          checkpoint_dir: str,
          custom_checkpoint: str):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
 
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
     model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=1e-3, weight_decay= 0.001)
+    optimizer = torch.optim.Adam(
+        params=model.parameters(),
+        lr=1e-3, 
+        weight_decay=0.001)
 
     dataset_config = {
         "max_size": 10_000_000,  # Set arbitrarily, TODO: pick a number more intentionally
@@ -143,15 +153,15 @@ def main(n_epochs: int,
         "max_chunks": 512        # Set arbitrarily, TODO: pick a number more intentionally
     }
 
-    train_loader = ChunkedDataset(
+    train_loader = DataLoader(ChunkedDataset(
         train_split=True,
         **dataset_config
-    ).to(device)
+    ))
 
-    valid_loader = ChunkedDataset(
+    valid_loader = DataLoader(ChunkedDataset(
         train_split=False,
         **dataset_config
-    ).to(device)
+    ))
 
     train(
         model=model,
