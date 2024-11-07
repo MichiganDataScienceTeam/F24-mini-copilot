@@ -136,8 +136,6 @@ def main(n_epochs: int,
          save_interval: int,
          checkpoint_dir: str,
          custom_checkpoint: str):
-    print(f'Using device: {device}')
-
     dataset_config = {
         "max_size": 10_000_000,  # Set arbitrarily, TODO: pick a number more intentionally
         "tokenizer": tokenizer,
@@ -180,11 +178,13 @@ def main(n_epochs: int,
 
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f'Using device: {device}')
 
     parser = argparse.ArgumentParser(description="Train Copilot Model")
-    parser.add_argument("--checkpoint_folder", default="checkpoints", help="Directory where checkpoints are to be stored")
-    parser.add_argument("-c", "--custom_checkpoint", default=None, help="Checkpoint to load from (checkpoint.pt)")
+    parser.add_argument("--checkpoint-folder", default="checkpoints", help="Directory where checkpoints are to be stored")
+    parser.add_argument("-c", "--custom-checkpoint", default=None, help="Checkpoint to load from (checkpoint.pt)")
     parser.add_argument("-n", "--epochs", default=5, help="Number of epochs to train for")
+    parser.add_argument("-i", "--save-interval", default=5, help="Epoch interval between checkpoint saves")
     args = parser.parse_args()
     
-    main(args.epochs, args.checkpoint_folder, args.custom_checkpoint)
+    main(args.epochs, args.save_interval, args.checkpoint_folder, args.custom_checkpoint)
