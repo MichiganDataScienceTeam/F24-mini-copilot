@@ -146,12 +146,12 @@ def main(n_epochs: int,
     train_loader = ChunkedDataset(
         train_split=True,
         **dataset_config
-    )
+    ).to(device)
 
     valid_loader = ChunkedDataset(
         train_split=False,
         **dataset_config
-    )
+    ).to(device)
 
     train(
         model=model,
