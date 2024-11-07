@@ -138,13 +138,6 @@ def main(n_epochs: int,
          custom_checkpoint: str):
     print(f'Using device: {device}')
 
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")
-    model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
-    optimizer = torch.optim.Adam(
-        params=model.parameters(),
-        lr=1e-3, 
-        weight_decay=0.001)
-
     dataset_config = {
         "max_size": 10_000_000,  # Set arbitrarily, TODO: pick a number more intentionally
         "tokenizer": tokenizer,
@@ -153,15 +146,24 @@ def main(n_epochs: int,
         "max_chunks": 512        # Set arbitrarily, TODO: pick a number more intentionally
     }
 
+    batch_size=16 # Set arbitrarily, TODO: pick a number more intentionally
+
+    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
+    optimizer = torch.optim.Adam(
+        params=model.parameters(),
+        lr=1e-3, 
+        weight_decay=0.001)
+
     train_loader = DataLoader(ChunkedDataset(
         train_split=True,
         **dataset_config
-    ))
+    ), batch_size=batch_size)
 
     valid_loader = DataLoader(ChunkedDataset(
         train_split=False,
         **dataset_config
-    ))
+    ), batch_size=batch_size)
 
     train(
         model=model,
