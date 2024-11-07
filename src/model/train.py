@@ -136,6 +136,8 @@ def main(n_epochs: int,
          save_interval: int,
          checkpoint_dir: str,
          custom_checkpoint: str):
+    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    
     dataset_config = {
         "max_size": 10_000_000,  # Set arbitrarily, TODO: pick a number more intentionally
         "tokenizer": tokenizer,
@@ -146,7 +148,6 @@ def main(n_epochs: int,
 
     batch_size=16 # Set arbitrarily, TODO: pick a number more intentionally
 
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")
     model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
     optimizer = torch.optim.Adam(
         params=model.parameters(),
@@ -187,4 +188,4 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--save-interval", default=5, help="Epoch interval between checkpoint saves")
     args = parser.parse_args()
     
-    main(args.epochs, args.save_interval, args.checkpoint_folder, args.custom_checkpoint)
+    main(int(args.epochs), int(args.save_interval), args.checkpoint_folder, args.custom_checkpoint)
