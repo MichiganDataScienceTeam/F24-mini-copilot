@@ -1,105 +1,90 @@
 import os
-import torch
-import evaluate
-import regex as re
-from tqdm import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer, AdamW, pipeline
-from torch.utils.data import DataLoader
-from datasets import load_dataset, Dataset, IterableDataset
-from dataset import get_dataloaders, tokenize
+import math
 import argparse
-# import tokenize from tokenizer.py
+
+import torch
+from torch.utils.data import DataLoader
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from dataset import ChunkedDataset
 
 
-def make_model(lr, weight_decay, optim=torch.optim.Adam):
-    """Make a model"""
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f'Using device: {device}')
-
-    model = AutoModelForCausalLM.from_pretrained("gpt2")
-    # tokenizer = AutoTokenizer.from_pretrained("gpt2")
-    optimizer = optim(params=model.parameters(), lr=1e-3, weight_decay= 0.001)
-
-    model.to(device)
-    return model, optimizer
-
-
-# train one epoch
-def train_single_epoch(model, tokenize, optimizer, train_loader):
-    """Take in model, test_loader"""
+def train_single_epoch(model: AutoModelForCausalLM,
+                       optimizer: torch.optim.Optimizer,
+                       train_loader: DataLoader):
     model.train()
+
     for batch in train_loader:
-        # Note that device that data is on should be the same as the model
-        input_ids = tokenize(batch["content"])
-        labels = input_ids.clone()
-        # labels are automatically shifted for next token prediction
-        # assuming model is of type AutoModelForCausalLM
-        outputs = model(input_ids, labels=labels)
+        optimizer.zero_grad()
+
+        outputs = model(
+            input_ids=batch["input_ids"].to(device),
+            attention_mask=batch["attention_mask"].to(device),
+            labels=batch["labels"].to(device)
+        )
+        
         loss = outputs.loss
         loss.backward()
+
         optimizer.step()
-        #raise NotImplementedError
 
 
+def validate(model: AutoModelForCausalLM,
+             test_loader: DataLoader) -> tuple[float, float]:
+    loss_sum = 0
+    n_losses = 0
 
-def validate(model, tokenize, test_loader):
-    """
-    Run validation across batches in test_loader
-    'Take in model, test_loader and batch'
-
-    """
-    losses=[]
     model.eval()
 
     with torch.no_grad():
-        # for batch in test_loader:
-        #     # TODO: Implement validation loop
-        #     # Note that device that data is on should be the same as the model
-        #     ...
         for batch in test_loader:
-            # Implement validation loop
-            # Note that device that data is on should be the same as the model
-            input_ids = tokenize(batch["content"])
-            labels = input_ids.clone()
-            outputs = model(input_ids, labels=labels)
-            losses.append(outputs.loss)
-            loss = torch.mean(torch.tensor(losses))
-            try:
-                perplexity = torch.exp(loss)
-            except OverflowError:
-                perplexity = float("inf")
-                raise NotImplementedError
-            return loss.item(), perplexity.item()
+            outputs = model(
+                input_ids=batch["input_ids"].to(device),
+                attention_mask=batch["attention_mask"].to(device),
+                labels=batch["labels"].to(device)
+            )
+
+            loss_sum += outputs.loss.item()
+            n_losses += 1
         
-            # raise NotImplementedError
+    loss = loss_sum/n_losses
+
+    perplexity = math.exp(loss) # Default returns inf when overflow
+
+    return loss, perplexity
 
 
-# TODO: Consider setting up model checkpointing (set up a directory to save checkpoints)
-
-# train for many epochs
-def train(n_epochs, model, tokenizer, optimizer, train_loader, save_interval=1, save_dir='checkpoints', custom_checkpoint=None):
-    """
-    train model for n_epochs
-    """
-    model.train()
+def train(model: AutoModelForCausalLM,
+          optimizer: torch.optim.Optimizer,
+          train_loader: DataLoader,
+          n_epochs: int,
+          save_interval: int,
+          checkpoint_dir: str,
+          custom_checkpoint: str):
     if custom_checkpoint:
-         model = torch.load(custom_checkpoint)
+        model = torch.load(custom_checkpoint)
     
-    os.makedirs(save_dir, exist_ok=True)
-    # Clear residual gradients (might cause issues with taking grad. of frozen layers)
-    model.zero_grad(set_to_none=True)
+    model.train()
+    
+    os.makedirs(checkpoint_dir, exist_ok=True)
 
-    for epoch in range(n_epochs):
+    for epoch in range(1, n_epochs+1):
         print(f"Epoch: {epoch}")
-        train_single_epoch(model, tokenizer, optimizer, train_loader)
-        if (epoch + 1) % save_interval == 0:
-                    checkpoint_path = os.path.join(save_dir, f"checkpoint_epoch_{epoch + 1}.pt")
-                    torch.save({
-                        'epoch': epoch + 1,
-                        'model_state_dict': model.state_dict(),
-                        'optimizer_state_dict': optimizer.state_dict(),
-                    }, checkpoint_path)
-                    print(f"Checkpoint saved at {checkpoint_path}")
+        
+        train_single_epoch(model, optimizer, train_loader)
+
+        if epoch % save_interval == 0:
+            checkpoint_path = os.path.join(checkpoint_dir, f"epoch_{epoch}.pt")
+
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+            }, checkpoint_path)
+
+            print(f"Checkpoint saved at {checkpoint_path}")
+        
+        # TODO: print training & validation metrics
 
     print("Training complete")
 
@@ -107,20 +92,38 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
 
-    model     = AutoModelForCausalLM.from_pretrained("gpt2")
-    model.to(device)
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=1e-3, weight_decay= 0.001)
-    train_dataloader, valid_dataloader = get_dataloaders(batch_size=16)
+    dataset_config = {
+        "max_size": 10_000_000,  # Set arbitrarily, TODO: pick a number more intentionally
+        "tokenizer": tokenizer,
+        "chunk_size": 1024,      # IIRC max input length, TODO: verify
+        "chunk_overlap_len": 3,  # Set arbitrarily, TODO: pick a number more intentionally
+        "max_chunks": 512        # Set arbitrarily, TODO: pick a number more intentionally
+    }
+
+    # TODO: Consider gradient accumulation if GPU memory restricts batch sizes too much
+    batch_size=16 # Set arbitrarily, TODO: pick a number more intentionally
+
+    train_loader = DataLoader(ChunkedDataset(
+        train_split=True,
+        **dataset_config
+    ), batch_size=batch_size)
+
+    valid_loader = DataLoader(ChunkedDataset(
+        train_split=False,
+        **dataset_config
+    ), batch_size=batch_size)
+
     train(
-        n_epochs=5,
         model=model,
-        tokenizer=tokenize,
         optimizer=optimizer,
-        train_loader=train_dataloader,
+        train_loader=train_loader,
+        n_epochs=n_epochs,
+        save_interval=save_interval,
         checkpoint_dir=checkpoint_dir,
         custom_checkpoint=custom_checkpoint
     )
+
+    # TODO: validation
 
 
 if __name__ == "__main__":
