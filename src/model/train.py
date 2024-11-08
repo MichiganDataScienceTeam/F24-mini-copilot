@@ -2,17 +2,13 @@ import os
 import math
 import argparse
 
-from tqdm import tqdm
-import evaluate
-
 import torch
 from torch.utils.data import DataLoader
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from dataset import ChunkedDataset
 
 
-# TODO: Maybe consider gradient accumulation if GPU memory restricts batch sizes too much
 def train_single_epoch(model: AutoModelForCausalLM,
                        optimizer: torch.optim.Optimizer,
                        train_loader: DataLoader):
@@ -26,6 +22,7 @@ def train_single_epoch(model: AutoModelForCausalLM,
             attention_mask=batch["attention_mask"].to(device),
             labels=batch["labels"].to(device)
         )
+        
         loss = outputs.loss
         loss.backward()
 
@@ -57,25 +54,23 @@ def validate(model: AutoModelForCausalLM,
     return loss, perplexity
 
 
-# TODO: Consider setting up model checkpointing (set up a directory to save checkpoints)
-
-# train for many epochs
 def train(model: AutoModelForCausalLM,
           optimizer: torch.optim.Optimizer,
           train_loader: DataLoader,
           n_epochs: int,
           save_interval: int,
-          checkpoint_dir: str = 'checkpoints',
-          custom_checkpoint: str=None):
-    model.train()
-
+          checkpoint_dir: str,
+          custom_checkpoint: str):
     if custom_checkpoint:
         model = torch.load(custom_checkpoint)
+    
+    model.train()
     
     os.makedirs(checkpoint_dir, exist_ok=True)
 
     for epoch in range(1, n_epochs+1):
         print(f"Epoch: {epoch}")
+        
         train_single_epoch(model, optimizer, train_loader)
 
         if epoch % save_interval == 0:
@@ -88,10 +83,15 @@ def train(model: AutoModelForCausalLM,
             }, checkpoint_path)
 
             print(f"Checkpoint saved at {checkpoint_path}")
+        
+        # TODO: print training & validation metrics
 
     print("Training complete")
 
-def load_latest_checkpoint(checkpoint_dir, model, optimizer):
+
+def load_latest_checkpoint(model: AutoModelForCausalLM,
+                           optimizer: torch.optim.Optimizer,
+                           checkpoint_dir: str) -> int:
     """
     Load the latest checkpoint from the specified directory.
     
@@ -130,11 +130,20 @@ def load_latest_checkpoint(checkpoint_dir, model, optimizer):
     # Return the epoch number for further reference
     return checkpoint['epoch']
 
+
 def main(n_epochs: int,
          save_interval: int,
          checkpoint_dir: str,
          custom_checkpoint: str):
+    # TODO: Add option for retrained tokenizer
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
+
+    model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
+    optimizer = torch.optim.Adam(
+        params=model.parameters(),
+        lr=1e-3,             # Set arbitrarily, TODO: pick a number more intentionally
+        weight_decay=0.001   # Set arbitrarily, TODO: pick a number more intentionally
+    )
     
     dataset_config = {
         "max_size": 10_000_000,  # Set arbitrarily, TODO: pick a number more intentionally
@@ -144,13 +153,8 @@ def main(n_epochs: int,
         "max_chunks": 512        # Set arbitrarily, TODO: pick a number more intentionally
     }
 
+    # TODO: Consider gradient accumulation if GPU memory restricts batch sizes too much
     batch_size=16 # Set arbitrarily, TODO: pick a number more intentionally
-
-    model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
-    optimizer = torch.optim.Adam(
-        params=model.parameters(),
-        lr=1e-3, 
-        weight_decay=0.001)
 
     train_loader = DataLoader(ChunkedDataset(
         train_split=True,
@@ -186,4 +190,9 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--save-interval", default=5, help="Epoch interval between checkpoint saves")
     args = parser.parse_args()
     
-    main(int(args.epochs), int(args.save_interval), args.checkpoint_folder, args.custom_checkpoint)
+    main(
+        n_epochs=int(args.epochs),
+        save_interval=int(args.save_interval),
+        checkpoint_dir=args.checkpoint_folder,
+        custom_checkpoint=args.custom_checkpoint
+    )
