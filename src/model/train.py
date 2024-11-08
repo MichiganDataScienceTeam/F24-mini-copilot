@@ -84,7 +84,7 @@ def train(model: AutoModelForCausalLM,
             # TODO: I think this currently only saves the most recent model.
             # Should more models be saved or should the criteria for saving be certain performance improvements?
             torch.save({
-                'epoch': epoch + 1,
+                'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
             }, checkpoint_path)
