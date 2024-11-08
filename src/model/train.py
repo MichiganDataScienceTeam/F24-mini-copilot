@@ -81,8 +81,6 @@ def train(model: AutoModelForCausalLM,
         if epoch % save_interval == 0:
             checkpoint_path = os.path.join(checkpoint_dir, f"epoch_{epoch}.pt")
 
-            # TODO: I think this currently only saves the most recent model.
-            # Should more models be saved or should the criteria for saving be certain performance improvements?
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
