@@ -1,0 +1,4 @@
+dataset == 3.1.0
+session_info == 1.0.0
+torch == 2.5.0+cu121
+transformers == 4.44.2
