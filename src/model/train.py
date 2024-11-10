@@ -172,8 +172,11 @@ def main(n_epochs: int,
          save_interval: int,
          checkpoint_dir: str,
          custom_checkpoint: str):
-    # TODO: Add option for retrained tokenizer
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    try:
+        tokenizer = AutoTokenizer.from_pretrained("./tokenizer_10M")
+    except OSError as e:
+        print("[WARNING] tokenizer_10M folder was not found, defaulting to GPT2")
+        tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
     model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
     optimizer = torch.optim.Adam(
