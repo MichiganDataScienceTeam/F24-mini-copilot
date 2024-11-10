@@ -174,7 +174,7 @@ def main(n_epochs: int,
          custom_checkpoint: str):
     try:
         tokenizer = AutoTokenizer.from_pretrained("./tokenizer_10M")
-    except OSError as e:
+    except OSError as _:
         print("[WARNING] tokenizer_10M folder was not found, defaulting to GPT2")
         tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
