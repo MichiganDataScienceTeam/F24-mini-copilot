@@ -13,7 +13,8 @@ from time import time
 
 def train_single_epoch(model: AutoModelForCausalLM,
                        optimizer: torch.optim.Optimizer,
-                       train_loader: DataLoader):
+                       train_loader: DataLoader,
+                       valid_loader: DataLoader):
     start_time = time()
 
     model.train()
@@ -49,7 +50,7 @@ def train_single_epoch(model: AutoModelForCausalLM,
         
     print(f"Train loss: {loss:.3f}, Train perplexity: {perplexity:.3f}")
 
-    v_loss, v_perplexity = validate(model, train_loader)
+    v_loss, v_perplexity = validate(model, valid_loader)
 
     print(f"Validation loss: {v_loss:.3f}, Validation perplexity: {v_perplexity:.3f}")
 
@@ -97,7 +98,12 @@ def train(model: AutoModelForCausalLM,
     for epoch in range(1, n_epochs+1):
         print(f"Epoch: {epoch}")
         
-        train_single_epoch(model, optimizer, train_loader)
+        train_single_epoch(
+            model=model,
+            optimizer=optimizer,
+            train_loader=train_loader,
+            valid_loader=valid_loader
+        )
 
         if epoch % save_interval == 0:
             checkpoint_path = os.path.join(checkpoint_dir, f"epoch_{epoch}.pt")
