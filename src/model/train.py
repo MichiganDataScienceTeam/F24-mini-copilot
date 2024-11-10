@@ -30,9 +30,11 @@ def train_single_epoch(model: AutoModelForCausalLM,
         loss.backward()
 
         optimizer.step()
+
         # Retrieve loss and train accuracy
         train_loss = loss.item()
         loss_sum += train_loss
+        n_losses += 1
     
     # TODO: print training & validation metrics
     loss = loss_sum/n_losses
