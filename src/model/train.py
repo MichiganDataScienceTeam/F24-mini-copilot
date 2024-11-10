@@ -8,10 +8,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from dataset import ChunkedDataset
 
+from time import time
+
 
 def train_single_epoch(model: AutoModelForCausalLM,
                        optimizer: torch.optim.Optimizer,
                        train_loader: DataLoader):
+    start_time = time()
+
     model.train()
 
     loss_sum = 0
@@ -36,16 +40,18 @@ def train_single_epoch(model: AutoModelForCausalLM,
         loss_sum += train_loss
         n_losses += 1
     
-    # TODO: print training & validation metrics
+    # Print training & validation metrics
+    print(f"Finished epoch in {time() - start_time:.3f}s")
+    
     loss = loss_sum/n_losses
 
     perplexity = math.exp(loss)
         
-    print(f"Train loss: {loss:.2f}, Train perplexity: {perplexity:.2f}")
+    print(f"Train loss: {loss:.3f}, Train perplexity: {perplexity:.3f}")
 
     v_loss, v_perplexity = validate(model, train_loader)
 
-    print(f"Validation loss: {v_loss:.2f}, Validation perplexity: {v_perplexity:.2f}")
+    print(f"Validation loss: {v_loss:.3f}, Validation perplexity: {v_perplexity:.3f}")
 
 
 def validate(model: AutoModelForCausalLM,
