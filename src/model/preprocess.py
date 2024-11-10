@@ -98,7 +98,7 @@ def tests():
 
         string2 = '''keep me'''
     """
-    res = clean_comments(input1)
+    _ = clean_comments(input1)
 
     input2 = '''
         string = """

@@ -108,7 +108,7 @@ class ChunkedDataset(CleanDataset):
 if __name__ == "__main__":
     try:
         tokenizer = AutoTokenizer.from_pretrained("./tokenizer_10M")
-    except OSError as e:
+    except OSError as _:
         print("[WARNING] tokenizer_10M folder was not found, defaulting to GPT2")
         tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
