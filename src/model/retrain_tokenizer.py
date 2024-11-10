@@ -14,7 +14,7 @@ ds = CleanDataset(
 # Reformat data for retraining
 def get_training_corpus(ds_):
     for sample in ds_:
-        yield sample["content"]
+        yield sample
 
 # Load old tokenizer
 old_tokenizer = AutoTokenizer.from_pretrained("gpt2")
