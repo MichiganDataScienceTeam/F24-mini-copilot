@@ -178,15 +178,15 @@ def main(n_epochs: int,
     model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
     optimizer = torch.optim.Adam(
         params=model.parameters(),
-        lr=1e-5,             # Set arbitrarily, TODO: pick a number more intentionally
-        weight_decay=0.001   # Set arbitrarily, TODO: pick a number more intentionally
+        lr=1e-5,             # TODO: add scheduler
+        weight_decay=0.001   # Set almost arbitrarily, pick a number more intentionally
     )
     
     dataset_config = {
-        "max_size": 500_000,     # Set arbitrarily, TODO: pick a number more intentionally
+        "max_size": 500_000,     # Set almost arbitrarily, pick a number more intentionally
         "tokenizer": tokenizer,
-        "chunk_size": 256,       # Do not feel model too much
-        "chunk_overlap_len": 16, # Set arbitrarily, TODO: pick a number more intentionally
+        "chunk_size": 256,       # Do not feed model too many tokens
+        "chunk_overlap_len": 16, # Set almost arbitrarily, pick a number more intentionally
         "max_chunks": 64         # Should not include too much of any given file
     }
 
@@ -213,10 +213,6 @@ def main(n_epochs: int,
         checkpoint_dir=checkpoint_dir,
         custom_checkpoint=custom_checkpoint
     )
-
-    # TODO: validation
-    # validation after training is not as good as putting it into the training loop
-
 
 
 if __name__ == "__main__":
