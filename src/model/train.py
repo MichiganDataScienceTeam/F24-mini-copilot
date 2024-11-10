@@ -88,14 +88,20 @@ def train(model: AutoModelForCausalLM,
           save_interval: int,
           checkpoint_dir: str,
           custom_checkpoint: str):
+    epoch0 = 0
+
     if custom_checkpoint:
-        model = torch.load(custom_checkpoint)
+        checkpoint = torch.load(custom_checkpoint)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+
+        epoch0 = checkpoint["epoch"]
     
     model.train()
     
     os.makedirs(checkpoint_dir, exist_ok=True)
 
-    for epoch in range(1, n_epochs+1):
+    for epoch in range(epoch0 + 1, epoch0 + n_epochs + 1):
         print(f"Epoch: {epoch}")
         
         train_single_epoch(
@@ -172,16 +178,16 @@ def main(n_epochs: int,
     model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
     optimizer = torch.optim.Adam(
         params=model.parameters(),
-        lr=1e-3,             # Set arbitrarily, TODO: pick a number more intentionally
+        lr=1e-5,             # Set arbitrarily, TODO: pick a number more intentionally
         weight_decay=0.001   # Set arbitrarily, TODO: pick a number more intentionally
     )
     
     dataset_config = {
-        "max_size": 10_000_000,  # Set arbitrarily, TODO: pick a number more intentionally
+        "max_size": 500_000,     # Set arbitrarily, TODO: pick a number more intentionally
         "tokenizer": tokenizer,
-        "chunk_size": 1024,      # IIRC max input length, TODO: verify
-        "chunk_overlap_len": 3,  # Set arbitrarily, TODO: pick a number more intentionally
-        "max_chunks": 512        # Set arbitrarily, TODO: pick a number more intentionally
+        "chunk_size": 256,       # Do not feel model too much
+        "chunk_overlap_len": 16, # Set arbitrarily, TODO: pick a number more intentionally
+        "max_chunks": 64         # Should not include too much of any given file
     }
 
     # TODO: Consider gradient accumulation if GPU memory restricts batch sizes too much
