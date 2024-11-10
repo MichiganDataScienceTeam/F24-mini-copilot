@@ -14,6 +14,9 @@ def train_single_epoch(model: AutoModelForCausalLM,
                        train_loader: DataLoader):
     model.train()
 
+    loss_sum = 0
+    n_losses = 0
+
     for batch in train_loader:
         optimizer.zero_grad()
 
@@ -27,6 +30,20 @@ def train_single_epoch(model: AutoModelForCausalLM,
         loss.backward()
 
         optimizer.step()
+        # Retrieve loss and train accuracy
+        train_loss = loss.item()
+        loss_sum += train_loss
+    
+    # TODO: print training & validation metrics
+    loss = loss_sum/n_losses
+
+    perplexity = math.exp(loss)
+        
+    print(f"Train loss: {loss:.2f}, Train perplexity: {perplexity:.2f}")
+
+    v_loss, v_perplexity = validate(model, train_loader)
+
+    print(f"Validation loss: {v_loss:.2f}, Validation perplexity: {v_perplexity:.2f}")
 
 
 def validate(model: AutoModelForCausalLM,
@@ -57,6 +74,7 @@ def validate(model: AutoModelForCausalLM,
 def train(model: AutoModelForCausalLM,
           optimizer: torch.optim.Optimizer,
           train_loader: DataLoader,
+          valid_loader: DataLoader,
           n_epochs: int,
           save_interval: int,
           checkpoint_dir: str,
@@ -84,7 +102,6 @@ def train(model: AutoModelForCausalLM,
 
             print(f"Checkpoint saved at {checkpoint_path}")
         
-        # TODO: print training & validation metrics
 
     print("Training complete")
 
@@ -177,6 +194,8 @@ def main(n_epochs: int,
     )
 
     # TODO: validation
+    # validation after training is not as good as putting it into the training loop
+
 
 
 if __name__ == "__main__":
