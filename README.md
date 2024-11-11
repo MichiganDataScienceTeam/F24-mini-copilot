@@ -1,8 +1,18 @@
 # Mini Copilot, Fall 2024
 
-In this project, we will attempt to recreate a GitHub Copilot. Since properly recreating the service requires an immense amount of compute for model training, we will seek to build a **Mini Copilot**. The purpose of this undertaking, and the materials in this repo, is purely educational.
+In this project, we will attempt to recreate GitHub Copilot. Since properly recreating the service requires an immense amount of compute for model training, we will seek to build a **Mini Copilot**.
 
-Weekly slides can be found [here](https://drive.google.com/drive/folders/1EUTBDfIL_Y3dRKkDsNaysntJQjiOef1c?usp=drive_link) (requires UMich login).
+This repository contains both educational materials (starter notebooks for basic training) and our actual implementation of recreating GitHub Copilot. Education materials can be found under `education/`, and our implementation can be found under `src/`.
+
+Accompanying educational slide decks can be found [here](https://drive.google.com/drive/folders/1EUTBDfIL_Y3dRKkDsNaysntJQjiOef1c?usp=drive_link) (requires UMich login).
+
+## Methods
+
+Recreating GitHub Copilot involves various parts -- the underlying code completion model, the endpoint serving the model, and the actual application (VSCode extension) using the model.
+
+- **Code completion model:** To train the underlying code completion model, we train `gpt-2` on a code completion task (code found under `src/model`).
+- **Serving the model:** To serve the model, we use AWS Lambda (container image found under `src/backend`).
+- **VSCode extension:** To build the VSCode extension, we use the `registerInlineCompletionItemProvider` VSCode API (full implementation found under `src/extension`). This extension calls our Lambda endpoint to supply the code completion.
 
 ## Project Master Schedule
 
@@ -17,8 +27,19 @@ Weekly slides can be found [here](https://drive.google.com/drive/folders/1EUTBDf
 | 7    | 11/10  | Buffer Week / Going deeper                  |
 | 8    | 11/17  | Final Expo Prep                             |
 
-## Repository Structure
+## Acknowledgements
 
-This repository contains both educational materials (starter notebooks for basic training) and our actual full implementation of recreating GitHub Copilot.
+Project Members:
+- Aarushi Shah
+- Colin Gordon
+- Dennis Farmer
+- Jeffrey Lu
+- Kevin Han
+- Maxim Kim
+- Michael Liao
+- Rafael Khoury
+- Selina Sun
 
-Education materials can be found under `education/`, and our implementation can be found under `src/`.
+Project Leads:
+- Amirali Danai
+- Nishant Dash
