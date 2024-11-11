@@ -55,18 +55,9 @@ def include(content: str) -> bool:
     return bool(re.search("|".join(libraries), content))
 
 
-# -----------------------  Testing ---------------------
-
-
+# Filters samples to return only code
 def keep_only_content(sample: dict) -> dict:
-    # TODO: Is there a way to remove other keys instead of forcing []?
-    for key in sample.keys():
-        if key == "content":
-            continue
-
-        sample[key] = []
-    
-    return sample
+    return {"content": sample["content"]}
 
 
 # preview cleaning and check

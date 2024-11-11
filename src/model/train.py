@@ -125,10 +125,66 @@ def train(model: AutoModelForCausalLM,
 
     print("Training complete")
 
-def main():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f'Using device: {device}')
 
+def load_latest_checkpoint(model: AutoModelForCausalLM,
+                           optimizer: torch.optim.Optimizer,
+                           checkpoint_dir: str) -> int:
+    """
+    Load the latest checkpoint from the specified directory.
+    
+    Args:
+        checkpoint_dir (str): Directory containing the checkpoint files.
+        model (torch.nn.Module): The model to load the weights into.
+        optimizer (torch.optim.Optimizer): The optimizer to load the state into.
+        
+    Returns:
+        int: The epoch number of the loaded checkpoint, or -1 if no checkpoint was found.
+    """
+    # Get a list of all .pt files in the checkpoint directory
+    checkpoint_files = [f for f in os.listdir(checkpoint_dir) if f.endswith('.pt')]
+    
+    if not checkpoint_files:
+        print("No checkpoint files found.")
+        model = AutoModelForCausalLM.from_pretrained("gpt2")
+        return 0
+
+    
+    # Determine the most recent checkpoint file based on modification time
+    latest_checkpoint = max(
+        (os.path.join(checkpoint_dir, f) for f in checkpoint_files),
+        key=os.path.getmtime
+    )
+    
+    print(f"Loading checkpoint from: {latest_checkpoint}")
+    
+    # Load the checkpoint
+    checkpoint = torch.load(latest_checkpoint)
+    
+    # Load the model and optimizer state
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    
+    # Return the epoch number for further reference
+    return checkpoint['epoch']
+
+
+def main(n_epochs: int,
+         save_interval: int,
+         checkpoint_dir: str,
+         custom_checkpoint: str):
+    try:
+        tokenizer = AutoTokenizer.from_pretrained("./tokenizer_10M")
+    except OSError as _:
+        print("[WARNING] tokenizer_10M folder was not found, defaulting to GPT2")
+        tokenizer = AutoTokenizer.from_pretrained("gpt2")
+
+    model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
+    optimizer = torch.optim.Adam(
+        params=model.parameters(),
+        lr=1e-5,             # TODO: add scheduler
+        weight_decay=0.001   # Set almost arbitrarily, pick a number more intentionally
+    )
+    
     dataset_config = {
         "max_size": 500_000,     # Set almost arbitrarily, pick a number more intentionally
         "tokenizer": tokenizer,
@@ -163,4 +219,19 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f'Using device: {device}')
+
+    parser = argparse.ArgumentParser(description="Train Copilot Model")
+    parser.add_argument("--checkpoint-folder", default="checkpoints", help="Directory where checkpoints are to be stored")
+    parser.add_argument("-c", "--custom-checkpoint", default=None, help="Checkpoint to load from (checkpoint.pt)")
+    parser.add_argument("-n", "--epochs", default=5, help="Number of epochs to train for")
+    parser.add_argument("-i", "--save-interval", default=5, help="Epoch interval between checkpoint saves")
+    args = parser.parse_args()
+    
+    main(
+        n_epochs=int(args.epochs),
+        save_interval=int(args.save_interval),
+        checkpoint_dir=args.checkpoint_folder,
+        custom_checkpoint=args.custom_checkpoint
+    )
