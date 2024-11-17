@@ -26,3 +26,6 @@ jobs:
 
     - name: Push Docker Image to ECR
       run: docker push ${{ steps.login-ecr.outputs.registry }}/[TODO]:latest
+
+    - name: Update lambda funcion
+    # TODO
