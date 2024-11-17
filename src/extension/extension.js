@@ -12,33 +12,33 @@ function debounce(func, delay) {
 }
 
 async function fetchPrediction(text) {
-		const route = "https://fjru3p67wsonsdfbdp7p673giq0cvtep.lambda-url.us-east-2.on.aws";
-		if (text.trim() !== '') {
-				const body = text;
+	const route = "https://fjru3p67wsonsdfbdp7p673giq0cvtep.lambda-url.us-east-2.on.aws";
+	if (text.trim() !== '') {
+		const body = text;
 
-				try {
-						const response = await fetch(route, {
-								method: 'POST',
-								body: body,
-								headers: { 'Content-Type': 'text/plain' },
-						});
-						
-						if (response.ok) {
-								const res = await response.text();
-								console.log("Res: ", res)
-								return res;
-						} else {
-								console.error('Error:', response.status);
-								return "";
-						}
-				} catch (error) {
-						console.error('Fetch error:', error);
-						return "";
-				}
-		} else {
-				console.log("empty")
+		try {
+			const response = await fetch(route, {
+				method: 'POST',
+				body: body,
+				headers: { 'Content-Type': 'text/plain' },
+			});
+			
+			if (response.ok) {
+				const res = await response.text();
+				console.log("Res: ", res)
+				return res;
+			} else {
+				console.error('Error:', response.status);
 				return "";
+			}
+		} catch (error) {
+			console.error('Fetch error:', error);
+			return "";
 		}
+	} else {
+		console.log("empty")
+		return "";
+	}
 }
 
 // This method is called when your extension is activated
