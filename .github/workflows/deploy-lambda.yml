@@ -22,10 +22,7 @@ jobs:
 
     - name: Build Docker Image
       working-directory: ./src/backend
-      run: docker build -t my-lambda .
-
-    - name: Tag Docker Image
-      run: docker tag my-lambda:latest ${{ steps.login-ecr.outputs.registry }}/my-lambda:latest
+      run: docker build -t [TODO] .
 
     - name: Push Docker Image to ECR
-      run: docker push ${{ steps.login-ecr.outputs.registry }}/my-lambda:latest
+      run: docker push ${{ steps.login-ecr.outputs.registry }}/[TODO]:latest
