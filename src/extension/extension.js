@@ -1,127 +1,94 @@
-// Import necessary modules
+// The module 'vscode' contains the VS Code extensibility API
+// Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
+
+// Debounce utility function
+function debounce(func, delay) {
+	let timeout;
+	return (...args) => {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => func(...args), delay);
+	};
+}
+
+// This method is called when your extension is activated
+// Your extension is activated the very first time the command is executed
+
+/**
+ * @param {vscode.ExtensionContext} context
+ */
 
 function activate(context) {
 
-    const disposable = vscode.commands.registerCommand('mini-copilot.helloWorld', function () {
-        vscode.window.showInformationMessage('Hello World from Inline Completion!');
-    });
+	// Use the console to output diagnostic information (console.log) and errors (console.error)
+	// This line of code will only be executed once when your extension is activated
+	console.log('Congratulations, your extension "tutorial" is now active!');
 
-    console.log('Congratulations, your extension "inline-completion" is now active!');
+	// The command has been defined in the package.json file
+	// Now provide the implementation of the command with  registerCommand
+	// The commandId parameter must match the command field in package.json
+	const disposable = vscode.commands.registerCommand('mini-copilot.helloWorld', function () {
+		console.log("activated!");
+	});
 
-    // Debounce function for async functions
-    function debounceAsync(func, wait) {
-        let timeout = null;
-        let lastArgs = null;
-        let pendingPromise = null;
-        let pendingResolve = null;
-        let pendingReject = null;
+	const debouncedFetchSuggestions = debounce(async (document, position, token, resolve) => {
+		console.log("triggered")
+		const text = document.getText(new vscode.Range(new vscode.Position(Math.max(0, position.line - 5), 0), position));
+		const route = "https://fjru3p67wsonsdfbdp7p673giq0cvtep.lambda-url.us-east-2.on.aws";
 
-        return function (...args) {
-            // Always capture the latest arguments
-            lastArgs = args;
+		if (text.trim() !== '') {
+				const body = text;
 
-            // Clear the existing timeout
-            if (timeout) clearTimeout(timeout);
-
-            // Create a single pending promise if it doesn't exist
-            if (!pendingPromise) {
-                pendingPromise = new Promise((resolve, reject) => {
-                    pendingResolve = resolve;
-                    pendingReject = reject;
-                });
-            }
-
-            // Set up the new timeout
-            timeout = setTimeout(async () => {
-                try {
-                    // Execute the function with the latest arguments
-                    const result = await func(...lastArgs);
-                    pendingResolve(result);
-                } catch (error) {
-                    pendingReject(error);
-                } finally {
-                    // Reset everything
-                    timeout = null;
-                    pendingPromise = null;
-                    pendingResolve = null;
-                    pendingReject = null;
-                }
-            }, wait);
-
-            // Return the pending promise
-            return pendingPromise;
-        };
-    }
+				try {
+						const response = await fetch(route, {
+								method: 'POST',
+								body: body,
+								headers: { 'Content-Type': 'text/plain' },
+						});
+						
+						if (response.ok) {
+								const responseBody = await response.text();
+								const completionItem = new vscode.InlineCompletionItem(responseBody);
+								completionItem.range = new vscode.Range(position, position);
+								console.log("got "+ responseBody);
+								resolve({ items: [completionItem] });
+						} else {
+								console.error('Error:', response.status);
+								resolve({ items: [] });
+						}
+				} catch (error) {
+						console.error('Fetch error:', error);
+						resolve({ items: [] });
+				}
+		} else {
+				console.log("empty")
+				resolve({ items: [] });
+		}
+	}, 1000); // 500ms debounce delay
 
 
-    // Function to fetch data from your API
-    async function getData(inputText) {
-        const url = "https://fjru3p67wsonsdfbdp7p673giq0cvtep.lambda-url.us-east-2.on.aws/";
-
-        try {
-            const response = await fetch(url, {
-                method: "POST",
-                body: {"body": inputText},
-                headers: {
-                    'Content-Type': 'text/plain',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`Response status: ${response.status}`);
-            }
-
-            const data = await response.text();
-            return data;
-        } catch (error) {
-            console.error(error.message);
-            throw error;
+		// Register an inline suggestion provider
+    const inlineProvider = {
+        provideInlineCompletionItems: (document, position, context, token) => {
+            // Return a promise that will resolve once the debounced function completes
+            return new Promise(resolve => 
+                debouncedFetchSuggestions(document, position, token, resolve)
+  					);
         }
-    }
-
-    // Inline Completion Provider
-    const inlineCompletionProvider = {
-        provideInlineCompletionItems: debounceAsync(async (
-            document,
-            position,
-            _context,
-            _token
-        ) => {
-            // Get the text before the cursor
-            const startPosition = position.with(undefined, Math.max(0, position.character - 5));
-            const textBeforeCursor = document.getText(new vscode.Range(startPosition, position));
-
-            try {
-                // Fetch the completion from your API
-                const completionText = await getData(textBeforeCursor);
-
-                // Create an InlineCompletionItem
-                const completionItem = new vscode.InlineCompletionItem(completionText);
-
-                // Return the completion item
-                return [completionItem];
-            } catch (error) {
-                console.error('Error fetching completion:', error);
-                return null;
-            }
-        }, 1000) // Debounce with 1 second delay
     };
 
+		const providerDisposable = vscode.languages.registerInlineCompletionItemProvider(
+			{ pattern: '**' }, // Apply to all files
+			inlineProvider
+	);
 
-    // Register the provider
-    const providerDisposable = vscode.languages.registerInlineCompletionItemProvider(
-        { pattern: '**' },
-        inlineCompletionProvider
-    );
-
-    context.subscriptions.push(disposable, providerDisposable);
+	context.subscriptions.push(disposable, providerDisposable);
 }
 
-exports.activate = activate;
+// This method is called when your extension is deactivated
+function deactivate() {}
 
-function deactivate() {
-    // Clean up resources if necessary
+module.exports = {
+	activate,
+	deactivate
 }
-
-exports.deactivate = deactivate;
