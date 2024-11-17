@@ -11,6 +11,36 @@ function debounce(func, delay) {
 	};
 }
 
+async function fetchPrediction(text) {
+		const route = "https://fjru3p67wsonsdfbdp7p673giq0cvtep.lambda-url.us-east-2.on.aws";
+		if (text.trim() !== '') {
+				const body = text;
+
+				try {
+						const response = await fetch(route, {
+								method: 'POST',
+								body: body,
+								headers: { 'Content-Type': 'text/plain' },
+						});
+						
+						if (response.ok) {
+								const res = await response.text();
+								console.log("Res: ", res)
+								return res;
+						} else {
+								console.error('Error:', response.status);
+								return "";
+						}
+				} catch (error) {
+						console.error('Fetch error:', error);
+						return "";
+				}
+		} else {
+				console.log("empty")
+				return "";
+		}
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 
@@ -35,35 +65,15 @@ function activate(context) {
 		console.log("triggered")
 		const text = document.getText(new vscode.Range(new vscode.Position(Math.max(0, position.line - 5), 0), position));
 		const route = "https://fjru3p67wsonsdfbdp7p673giq0cvtep.lambda-url.us-east-2.on.aws";
-
-		if (text.trim() !== '') {
-				const body = text;
-
-				try {
-						const response = await fetch(route, {
-								method: 'POST',
-								body: body,
-								headers: { 'Content-Type': 'text/plain' },
-						});
-						
-						if (response.ok) {
-								const responseBody = await response.text();
-								const completionItem = new vscode.InlineCompletionItem(responseBody);
-								completionItem.range = new vscode.Range(position, position);
-								console.log("got "+ responseBody);
-								resolve({ items: [completionItem] });
-						} else {
-								console.error('Error:', response.status);
-								resolve({ items: [] });
-						}
-				} catch (error) {
-						console.error('Fetch error:', error);
-						resolve({ items: [] });
-				}
+		const res = await fetchPrediction(text)
+		if (res.length == 0) {
+			resolve({ items: [] });
 		} else {
-				console.log("empty")
-				resolve({ items: [] });
+			const completionItem = new vscode.InlineCompletionItem(res);
+			completionItem.range = new vscode.Range(position, position);
+			resolve({ items: [completionItem] });
 		}
+
 	}, 1000); // 500ms debounce delay
 
 
