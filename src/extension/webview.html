@@ -85,10 +85,42 @@
         pre {
             background-color: var(--vscode-editor-background);
             padding: 12px;
+            padding-top: 20px;
             border-radius: 4px;
             overflow-x: auto;
             margin: 8px 0;
             opacity: 1;
+            max-height: 300px;
+            transition: max-height 0.2s linear;
+            cursor: pointer;
+            position: relative;
+        }
+
+        pre:not(.closed)::before {
+            content: "Click to collapse code block";
+            text-align: center;
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 100%;
+            background-color: #444444;
+            font-size: 10px;
+        }
+
+        pre.closed {
+            max-height: 1em;
+            overflow: hidden;
+        }
+
+        pre.closed::before {
+            content: "Click to expand code block";
+            text-align: center;
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 100%;
+            background-color: #444444;
+            font-size: 10px;
         }
 
         code {
@@ -162,25 +194,25 @@
                 e.preventDefault()
                 askQuestion()
             }
-        });
+        })
 
         function askQuestion() {
-            const question = questionInput.value;
-            if (!question.trim()) return;
+            const question = questionInput.value
+            if (!question.trim()) return
             
-            loadingDiv.style.display = "block";
-            addToConversation(question, "user-message");
-            questionInput.value = "";
+            loadingDiv.style.display = "block"
+            addToConversation(question, "user-message")
+            questionInput.value = ""
             
             vscode.postMessage({
                 command: "askQuestion",
                 text: question
-            });
+            })
         }
 
         function resetConversation() {
-            vscode.postMessage({ command: "resetConversation" });
-            conversationDiv.innerHTML = "";
+            vscode.postMessage({ command: "resetConversation" })
+            conversationDiv.innerHTML = ""
         }
 
         function addToConversation(text, className) {
@@ -190,13 +222,16 @@
             if (className === "user-message") {
                 messageDiv.textContent = text
                 messageDiv.innerHTML = marked.parse(messageDiv.innerHTML)
-                // messageDiv.textContent += messageDiv.innerHTML
             } else if (className === "assistant-message") {
                 messageDiv.innerHTML = marked.parse(text)
             }
             
             conversationDiv.appendChild(messageDiv)
             conversationDiv.scrollTop = conversationDiv.scrollHeight
+
+            Array.from(document.getElementsByTagName("pre")).forEach(elt => {
+                elt.onclick = () => {elt.classList.toggle("closed")}
+            })
         }
 
         window.addEventListener("message", event => {
@@ -209,7 +244,7 @@
                 questionInput.value = message.text
                 askQuestion()
             }
-        });
+        })
     </script>
 </body>
 </html>
