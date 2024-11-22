@@ -31,6 +31,7 @@ Recreating GitHub Copilot involves various parts -- the underlying code completi
 
 Project Members:
 - Aarushi Shah
+- Adarsh Bharathwaj
 - Colin Gordon
 - Dennis Farmer
 - Jeffrey Lu
