@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            display: grid;
+            overflow-y: hidden;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--vscode-editor-foreground);
+        }
+
+        #question-input {
+            min-height: 100px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--vscode-input-border);
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border-radius: 6px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .button-group {
+            justify-self: center;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #ask-button {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+
+        #reset-button {
+            background-color: var(--vscode-errorForeground);
+            color: white;
+            margin-left: 10px;
+        }
+
+        #conversation {
+            margin-top: 24px;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+            padding-right: 12px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            white-space: normal;
+        }
+
+        .user-message {
+            background-color: var(--vscode-editor-inactiveSelectionBackground);
+            margin-left: 30px;
+            opacity: 0.8;
+        }
+
+        .assistant-message {
+            background-color: var(--vscode-editor-selectionBackground);
+            margin-right: 30px;
+            opacity: 0.7;
+        }
+
+        pre {
+            background-color: var(--vscode-editor-background);
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 8px 0;
+            opacity: 1;
+        }
+
+        code {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 13px;
+            background-color: var(--vscode-editor-background);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        #loading {
+            display: none;
+            margin: 16px 0;
+            color: var(--vscode-descriptionForeground);
+            font-style: italic;
+            animation: pulse 1.5s infinite;
+        }
+
+        #conversation {
+            margin-top: 24px;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+            padding-right: 12px;
+            padding-bottom: 20px; 
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--vscode-editor-background);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--vscode-scrollbarSlider-background);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--vscode-scrollbarSlider-hoverBackground);
+        }
+    </style>
+</head>
+<body>
+    <textarea id="question-input" placeholder="Ask your coding question here...
+(Press Ctrl/Cmd + Enter to send)"></textarea>
+    <div class="button-group">
+        <button id="ask-button" onclick="askQuestion()">Ask Question</button>
+        <button id="reset-button" onclick="resetConversation()">Reset Conversation</button>
+    </div>
+    <div id="loading">Thinking...</div>
+    <div id="conversation"></div>
+
+    <script>
+        const vscode = acquireVsCodeApi()
+        const conversationDiv = document.getElementById("conversation")
+        const loadingDiv = document.getElementById("loading")
+        const questionInput = document.getElementById("question-input")
+        
+        // Add keyboard shortcut
+        questionInput.addEventListener("keydown", function(e) {
+            if (e.key == "Enter" && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault()
+                askQuestion()
+            }
+        });
+
+        function askQuestion() {
+            const question = questionInput.value;
+            if (!question.trim()) return;
+            
+            loadingDiv.style.display = "block";
+            addToConversation(question, "user-message");
+            questionInput.value = "";
+            
+            vscode.postMessage({
+                command: "askQuestion",
+                text: question
+            });
+        }
+
+        function resetConversation() {
+            vscode.postMessage({ command: "resetConversation" });
+            conversationDiv.innerHTML = "";
+        }
+
+        function addToConversation(text, className) {
+            const messageDiv = document.createElement("div")
+            messageDiv.className = "message " + className
+            
+            if (className === "user-message") {
+                messageDiv.textContent = text
+                messageDiv.innerHTML = marked.parse(messageDiv.innerHTML)
+                // messageDiv.textContent += messageDiv.innerHTML
+            } else if (className === "assistant-message") {
+                messageDiv.innerHTML = marked.parse(text)
+            }
+            
+            conversationDiv.appendChild(messageDiv)
+            conversationDiv.scrollTop = conversationDiv.scrollHeight
+        }
+
+        window.addEventListener("message", event => {
+            const message = event.data
+
+            if (message.command == "response") {
+                loadingDiv.style.display = "none"
+                addToConversation(message.text, "assistant-message")
+            } else if (message.command == "insertQuestion") {
+                questionInput.value = message.text
+                askQuestion()
+            }
+        });
+    </script>
+</body>
+</html>
