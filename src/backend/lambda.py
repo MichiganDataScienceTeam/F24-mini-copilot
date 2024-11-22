@@ -4,9 +4,8 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-tokenizer = AutoTokenizer.from_pretrained(
-    "trained/mini-copilot-tokenizer/tokenizer_10M")
-model = AutoModelForCausalLM.from_pretrained("trained/mini-copilot/gpt2-large")
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+model = AutoModelForCausalLM.from_pretrained("trained/gpt2-728")
 model.to(device)
 model.eval()
 
