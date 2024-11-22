@@ -7,7 +7,10 @@ COPY lambda_requirements.txt ${LAMBDA_TASK_ROOT}
 RUN pip install --compile --no-cache-dir -r lambda_requirements.txt
 
 # Copy model
-COPY trained/gpt2-728 ${LAMBDA_TASK_ROOT}/trained/gpt2-728
+COPY trained/mini-copilot ${LAMBDA_TASK_ROOT}/trained/mini-copilot
+
+# Copy tokenizer
+COPY trained/mini-copilot-tokenizer ${LAMBDA_TASK_ROOT}/trained/mini-copilot-tokenizer
 
 # Copy function code
 COPY lambda.py ${LAMBDA_TASK_ROOT}

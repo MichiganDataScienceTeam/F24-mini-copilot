@@ -4,23 +4,22 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-tokenizer = AutoTokenizer.from_pretrained("gpt2")
-model = AutoModelForCausalLM.from_pretrained("trained/gpt2-728")
+tokenizer = AutoTokenizer.from_pretrained(
+    "trained/mini-copilot-tokenizer/tokenizer_10M")
+model = AutoModelForCausalLM.from_pretrained("trained/mini-copilot/gpt2-large")
 model.to(device)
 model.eval()
 
+pipe = pipeline("text-generation", model=model,
+                tokenizer=tokenizer, device=device, max_new_tokens=32)
+
 
 # Function to predict the next token
-def predict_next_token(input_text, model=model, tokenizer=tokenizer, max_length=50):
-    pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, device=device)
-
-    predicted_text = pipe(input_text)[0]["generated_text"]
-
-    input_text_len = len(input_text)
-
-    return predicted_text[input_text_len:]
+def get_completion(inp: str) -> str:
+    return pipe(inp)[0]["generated_text"][len(inp):]
 
 
+# Lambda handler
 def handler(event, context):
     try:
         if event.get('isBase64Encoded', False):
@@ -29,4 +28,4 @@ def handler(event, context):
             body = event['body']
     except (KeyError, json.JSONDecodeError) as e:
         return {"statusCode": 400, "body": f"Error processing request: {str(e)}"}
-    return {"statusCode": 200, "body": predict_next_token(body)}
+    return {"statusCode": 200, "body": get_completion(body)}
