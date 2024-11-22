@@ -15,7 +15,33 @@
     "commands": [
       {
         "command": "mini-copilot.helloWorld",
-        "title": "Hello World"
+        "title": "mini-copilot: Hello World"
+      },
+      {
+        "command": "mini-copilot.openQA",
+        "title": "mini-copilot: Q&A"
+      },
+      {
+        "command": "mini-copilot.askWithSelection",
+        "title": "mini-copilot: Ask About Selected Code"
+      }
+    ],
+    "configuration": {
+      "title": "Mini Copilot",
+      "properties": {
+        "miniCopilot.openAIKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API Key for Q&A feature"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "mini-copilot.askWithSelection",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a",
+        "when": "editorHasSelection"
       }
     ]
   },
@@ -25,14 +51,10 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.9",
-    "@types/node": "20.x",
     "@types/vscode": "^1.95.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
-    "eslint": "^9.13.0",
-    "generator-code": "^1.11.4",
-    "yo": "^5.0.0"
+    "eslint": "^9.13.0"
   },
   "directories": {
     "test": "test"
@@ -73,6 +95,7 @@
     "decamelize": "^4.0.0",
     "deep-is": "^0.1.4",
     "diff": "^5.2.0",
+    "dotenv": "^16.4.5",
     "eastasianwidth": "^0.2.0",
     "emoji-regex": "^9.2.2",
     "enhanced-resolve": "^5.17.1",
@@ -149,6 +172,7 @@
     "normalize-path": "^3.0.0",
     "once": "^1.4.0",
     "onetime": "^5.1.2",
+    "openai": "^4.72.0",
     "optionator": "^0.9.4",
     "ora": "^7.0.1",
     "p-limit": "^3.1.0",
